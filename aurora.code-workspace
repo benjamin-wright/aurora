@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": ".",
+			"name": "root"
+		},
+		{
+			"path": "./wasm",
+			"name": "wasm"
+		},
+		{
+			"path": "./content",
+			"name": "content"
+		}
+	],
+	"settings": {
+		"go.toolsEnvVars": {
+			"GOOS": "js",
+			"GOARCH": "wasm"
+		}
+	}
+}
