@@ -14,3 +14,4 @@ start: stop
 
 stop:
     docker stop aurora || true
+    docker rm aurora || true

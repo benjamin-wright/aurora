@@ -30,7 +30,7 @@ type WebGL struct {
 	gl     js.Value
 
 	ARRAY_BUFFER                                                                  BufferType
-	STATIC_DRAW                                                                   BufferUsage
+	STATIC_DRAW, DYNAMIC_COPY, STREAM_READ                                        BufferUsage
 	COLOR_BUFFER_BIT                                                              BufferMask
 	VERTEX_SHADER, FRAGMENT_SHADER                                                ShaderType
 	COMPILE_STATUS                                                                ShaderParameter
@@ -46,10 +46,14 @@ func New(canvas js.Value) (*WebGL, error) {
 	}
 
 	return &WebGL{
-		canvas:           canvas,
-		gl:               gl,
-		ARRAY_BUFFER:     BufferType(gl.Get("ARRAY_BUFFER").Int()),
-		STATIC_DRAW:      BufferUsage(gl.Get("STATIC_DRAW").Int()),
+		canvas:       canvas,
+		gl:           gl,
+		ARRAY_BUFFER: BufferType(gl.Get("ARRAY_BUFFER").Int()),
+
+		STATIC_DRAW:  BufferUsage(gl.Get("STATIC_DRAW").Int()),
+		DYNAMIC_COPY: BufferUsage(gl.Get("DYNAMIC_COPY").Int()),
+		STREAM_READ:  BufferUsage(gl.Get("STREAM_READ").Int()),
+
 		COLOR_BUFFER_BIT: BufferMask(gl.Get("COLOR_BUFFER_BIT").Int()),
 		VERTEX_SHADER:    ShaderType(gl.Get("VERTEX_SHADER").Int()),
 		FRAGMENT_SHADER:  ShaderType(gl.Get("FRAGMENT_SHADER").Int()),
@@ -87,6 +91,10 @@ func (gl *WebGL) Viewport(x1, y1, x2, y2 int) {
 
 func (gl *WebGL) CreateBuffer() Buffer {
 	return Buffer(gl.gl.Call("createBuffer"))
+}
+
+func (gl *WebGL) DeleteBuffer(buf Buffer) {
+	gl.gl.Call("deleteBuffer", js.Value(buf))
 }
 
 func (gl *WebGL) BindBuffer(t BufferType, buf Buffer) {

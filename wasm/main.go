@@ -20,19 +20,6 @@ func main() {
 	}
 }
 
-type Mesh struct {
-	mesh   []float32
-	colour []float32
-}
-
-func (m *Mesh) Mesh() []float32 {
-	return m.mesh
-}
-
-func (m *Mesh) Colour() []float32 {
-	return m.colour
-}
-
 func run() error {
 	canvas := js.Global().Get("document").Call("getElementById", "glcanvas")
 
@@ -43,20 +30,26 @@ func run() error {
 
 	eng := engine.New(gl)
 
-	background := Mesh{
-		mesh: []float32{
+	background := engine.Drawable{
+		Mesh: []float32{
 			-0.5, -0.5, 0,
 			0.5, -0.5, 0,
 			0, 0.5, 0,
 		},
-		colour: []float32{
+		Colour: []float32{
 			1, 0, 0,
 			0, 1, 0,
 			0, 0, 1},
 	}
 
 	scene := &engine.Scene{
-		Layers: []engine.Layer{
+		ClearColor: webgl.Color{
+			Red:   0.95,
+			Green: 0.95,
+			Blue:  0.95,
+			Alpha: 1.0,
+		},
+		Layers: []*engine.Layer{
 			{
 				Name: "background",
 				VertexShader: `
@@ -77,7 +70,7 @@ func run() error {
 						gl_FragColor = vec4(vColor, 1.0);
 					}
 				`,
-				Drawables: []engine.Drawable{
+				Drawables: []*engine.Drawable{
 					&background,
 				},
 			},
@@ -89,14 +82,14 @@ func run() error {
 		return fmt.Errorf("failed to initialise game engine: %+v", err)
 	}
 
-	refreshRate := 5
+	refreshRate := 60
 	frameTime := time.Duration(int(time.Second) / refreshRate)
-	last := time.Now()
-
 	for {
-		background.colour[0] = rand.Float32()
-		background.colour[4] = rand.Float32()
-		background.colour[8] = rand.Float32()
+		last := time.Now()
+
+		background.Colour[0] = rand.Float32()
+		background.Colour[4] = rand.Float32()
+		background.Colour[8] = rand.Float32()
 
 		err = eng.Render(scene)
 		if err != nil {
@@ -104,7 +97,8 @@ func run() error {
 		}
 
 		elapsed := time.Since(last)
-		last = time.Now()
+
+		log.Printf("render time: %dus", elapsed.Microseconds())
 
 		remaining := frameTime - elapsed
 		if remaining > 0 {
