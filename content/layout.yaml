@@ -1,0 +1,15 @@
+scenes:
+  name:
+    clearColor: [ 0.95, 0.95, 0.95, 1.0 ]
+    layers:
+      name:
+        vertexShader: shaders/vertex.glsl
+        gragmentShader: shaders/fragment.glsl
+        meshAttributes:
+        - name: position
+          type: float
+          size: 3
+        colorAttributes:
+        - name: color
+          type: float
+          size: 3

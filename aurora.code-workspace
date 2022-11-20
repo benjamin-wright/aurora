@@ -9,6 +9,10 @@
 			"name": "wasm"
 		},
 		{
+			"path": "./tools/img-convert",
+			"name": "img-convert"
+		},
+		{
 			"path": "./content",
 			"name": "content"
 		}

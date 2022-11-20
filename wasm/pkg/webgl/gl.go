@@ -8,6 +8,10 @@ import (
 type BufferType int
 type BufferUsage int
 type BufferMask int
+type TextureType int
+type TextureParameter int
+type TextureNumber int
+type PixelFormat int
 type Capacity int
 type DrawMode int
 type ShaderType int
@@ -16,6 +20,7 @@ type ProgramParameter int
 type ShaderParameter int
 
 type Buffer js.Value
+type Texture js.Value
 type Shader js.Value
 type Location js.Value
 type Program js.Value
@@ -29,9 +34,12 @@ type WebGL struct {
 	canvas js.Value
 	gl     js.Value
 
-	ARRAY_BUFFER                                                                  BufferType
+	ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER                                            BufferType
 	STATIC_DRAW, DYNAMIC_COPY, STREAM_READ                                        BufferUsage
 	COLOR_BUFFER_BIT                                                              BufferMask
+	TEXTURE_2D                                                                    TextureType
+	TEXTURE_MIN_FILTER, TEXTURE_MAG_FILTER, TEXTURE_WRAP_S, TEXTURE_WRAP_T        TextureParameter
+	RGBA, RGBA8                                                                   PixelFormat
 	VERTEX_SHADER, FRAGMENT_SHADER                                                ShaderType
 	COMPILE_STATUS                                                                ShaderParameter
 	LINK_STATUS, VALIDATE_STATUS                                                  ProgramParameter
@@ -46,9 +54,10 @@ func New(canvas js.Value) (*WebGL, error) {
 	}
 
 	return &WebGL{
-		canvas:       canvas,
-		gl:           gl,
-		ARRAY_BUFFER: BufferType(gl.Get("ARRAY_BUFFER").Int()),
+		canvas:               canvas,
+		gl:                   gl,
+		ARRAY_BUFFER:         BufferType(gl.Get("ARRAY_BUFFER").Int()),
+		ELEMENT_ARRAY_BUFFER: BufferType(gl.Get("ELEMENT_ARRAY_BUFFER").Int()),
 
 		STATIC_DRAW:  BufferUsage(gl.Get("STATIC_DRAW").Int()),
 		DYNAMIC_COPY: BufferUsage(gl.Get("DYNAMIC_COPY").Int()),
@@ -66,6 +75,14 @@ func New(canvas js.Value) (*WebGL, error) {
 		UNSIGNED_BYTE:  Type(gl.Get("UNSIGNED_BYTE").Int()),
 		UNSIGNED_SHORT: Type(gl.Get("UNSIGNED_SHORT").Int()),
 		UNSIGNED_INT:   Type(gl.Get("UNSIGNED_INT").Int()),
+
+		TEXTURE_2D:         TextureType(gl.Get("TEXTURE_2D").Int()),
+		TEXTURE_MIN_FILTER: TextureParameter(gl.Get("TEXTURE_MIN_FILTER").Int()),
+		TEXTURE_MAG_FILTER: TextureParameter(gl.Get("TEXTURE_MAG_FILTER").Int()),
+		TEXTURE_WRAP_S:     TextureParameter(gl.Get("TEXTURE_WRAP_S").Int()),
+		TEXTURE_WRAP_T:     TextureParameter(gl.Get("TEXTURE_WRAP_T").Int()),
+		RGBA:               PixelFormat(gl.Get("RGBA").Int()),
+		RGBA8:              PixelFormat(gl.Get("RGBA8").Int()),
 
 		POINTS:         DrawMode(gl.Get("POINTS").Int()),
 		LINE_STRIP:     DrawMode(gl.Get("LINE_STRIP").Int()),
@@ -200,4 +217,35 @@ func (gl *WebGL) UseProgram(p Program) {
 
 func (gl *WebGL) DrawArrays(mode DrawMode, i, n int) {
 	gl.gl.Call("drawArrays", int(mode), i, n)
+}
+
+func (gl *WebGL) DrawElements(mode DrawMode, count int, typ Type, offset int) {
+	gl.gl.Call("drawElements", int(mode), count, int(typ), offset)
+}
+
+func (gl *WebGL) Flush() {
+	gl.gl.Call("flush")
+}
+
+func (gl *WebGL) CreateTexture() Texture {
+	return Texture(gl.gl.Call("createTexture"))
+}
+
+func (gl *WebGL) BindTexture(texType TextureType, tex *Texture) {
+	if tex == nil {
+		gl.gl.Call("bindTexture", int(texType), nil)
+		return
+	}
+	gl.gl.Call("bindTexture", int(texType), js.Value(*tex))
+}
+
+func (gl *WebGL) TexImage2D(target TextureType, level int, internalformat PixelFormat, width int, height int, border int, format PixelFormat, typ Type, img []uint8) {
+	dataJS := uint8Array.New(len(img))
+	js.CopyBytesToJS(dataJS, img)
+
+	gl.gl.Call("texImage2D", int(target), level, int(internalformat), width, height, border, int(format), int(typ), dataJS)
+}
+
+func (gl *WebGL) GenerateMipmap(texType TextureType) {
+	gl.gl.Call("generateMipmap", int(texType))
 }

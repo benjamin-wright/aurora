@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"syscall/js"
 	"time"
 
@@ -30,75 +29,22 @@ func run() error {
 
 	eng := engine.New(gl)
 
-	background := engine.Drawable{
-		Mesh: []float32{
-			-0.5, -0.5, 0,
-			0.5, -0.5, 0,
-			0, 0.5, 0,
-		},
-		Colour: []float32{
-			1, 0, 0,
-			0, 1, 0,
-			0, 0, 1},
-	}
-
-	scene := &engine.Scene{
-		ClearColor: webgl.Color{
-			Red:   0.95,
-			Green: 0.95,
-			Blue:  0.95,
-			Alpha: 1.0,
-		},
-		Layers: []*engine.Layer{
-			{
-				Name: "background",
-				VertexShader: `
-					attribute vec3 position;
-					attribute vec3 color;
-					varying vec3 vColor;
-					
-					void main(void) {
-						gl_Position = vec4(position, 1.0);
-						vColor = color;
-					}
-				`,
-				FragmentShader: `
-					precision mediump float;
-					varying vec3 vColor;
-
-					void main(void) {
-						gl_FragColor = vec4(vColor, 1.0);
-					}
-				`,
-				Drawables: []*engine.Drawable{
-					&background,
-				},
-			},
-		},
-	}
-
-	err = eng.Init(scene)
+	err = eng.Init()
 	if err != nil {
 		return fmt.Errorf("failed to initialise game engine: %+v", err)
 	}
 
-	refreshRate := 60
+	refreshRate := 10
 	frameTime := time.Duration(int(time.Second) / refreshRate)
 	for {
 		last := time.Now()
 
-		background.Colour[0] = rand.Float32()
-		background.Colour[4] = rand.Float32()
-		background.Colour[8] = rand.Float32()
-
-		err = eng.Render(scene)
+		err = eng.Render()
 		if err != nil {
 			return fmt.Errorf("failed to render scene: %+v", err)
 		}
 
 		elapsed := time.Since(last)
-
-		log.Printf("render time: %dus", elapsed.Microseconds())
 
 		remaining := frameTime - elapsed
 		if remaining > 0 {
